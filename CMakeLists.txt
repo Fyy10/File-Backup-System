@@ -2,6 +2,18 @@ cmake_minimum_required(VERSION 3.5)
 
 project(File-Backup-System VERSION 0.1 LANGUAGES CXX)
 
+# add libraries
+add_subdirectory(core)
+add_subdirectory(extensions)
+include_directories(
+    core
+    extensions
+)
+set(FBS_LIBS
+    core
+    extensions
+)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)
@@ -51,7 +63,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(File-Backup-System PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(File-Backup-System PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${FBS_LIBS})
 
 set_target_properties(File-Backup-System PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

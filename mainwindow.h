@@ -16,8 +16,12 @@ public:
     ~MainWindow();
 
 private slots:
+    void browse_source_clicked();
+    void browse_target_clicked();
     void backup_clicked();
     void recover_clicked();
+    void pack_clicked();
+    void auto_clicked();
 
 private:
     Ui::MainWindow *ui;
