@@ -21,6 +21,8 @@ jobs:
     steps:
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
+      with:
+        version: '5.12.11'
 
     - uses: actions/checkout@v2
 
