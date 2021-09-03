@@ -19,6 +19,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+
     - uses: actions/checkout@v2
 
     - name: Configure CMake
