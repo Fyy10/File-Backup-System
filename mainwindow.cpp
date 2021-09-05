@@ -3,8 +3,8 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-#include "core.h"
-#include "extensions.h"
+#include "core.hpp"
+#include "extensions.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -48,16 +48,12 @@ void MainWindow::browse_target_clicked()
 void MainWindow::backup_clicked()
 {
     QMessageBox msgbox;
-    backup();
-    recover();
     msgbox.information(this, "Success", "Backup done!");
 }
 
 void MainWindow::recover_clicked()
 {
     QMessageBox msgbox;
-    huffman();
-    encrypt();
     msgbox.information(this, "Success", "Recover done!");
 }
 

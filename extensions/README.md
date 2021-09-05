@@ -1,3 +1,5 @@
-# Extentions
+# Extensions
 
 ## ToDo
+
+- Encode & Decode (Huffman)

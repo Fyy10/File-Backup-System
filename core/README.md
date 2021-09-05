@@ -1,6 +1,3 @@
 # Core
 
-## ToDo
-
-1. Backup
-2. Recover
+The core functionalities of the File Backup System.

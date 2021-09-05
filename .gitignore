@@ -32,5 +32,6 @@
 *.app
 
 # user files
+.vscode
 .idea
 *.user
