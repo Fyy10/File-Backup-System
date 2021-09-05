@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "core.hpp"
+#include "extensions.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -25,5 +27,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+
+    bool build_generator(Generator && g, FileFilter && f, Export && e);
 };
 #endif // MAINWINDOW_H

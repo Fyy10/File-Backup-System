@@ -3,8 +3,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-#include "core.hpp"
-#include "extensions.hpp"
+#include <string>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -45,16 +44,29 @@ void MainWindow::browse_target_clicked()
     if (!target_path.isEmpty()) ui->TargetPath->setText(target_path);
 }
 
+bool MainWindow::build_generator(Generator && g, FileFilter && f, Export && e)
+{
+    return g.build(f, e);
+}
+
 void MainWindow::backup_clicked()
 {
     QMessageBox msgbox;
-    msgbox.information(this, "Success", "Backup done!");
+    bool succ_flag = build_generator(LocalGenerator(ui->SourcePath->text().toStdString(), ui->TargetPath->text().toStdString()), FileFilter(), Duplicator());
+    if (succ_flag)
+        msgbox.information(this, "Success", "Backup done!");
+    else
+        msgbox.critical(this, "Failure", "An unexpected error occurred!");
 }
 
 void MainWindow::recover_clicked()
 {
     QMessageBox msgbox;
-    msgbox.information(this, "Success", "Recover done!");
+    bool succ_flag = build_generator(LocalGenerator(ui->TargetPath->text().toStdString(), ui->SourcePath->text().toStdString()), FileFilter(), Duplicator());
+    if (succ_flag)
+        msgbox.information(this, "Success", "Recover done!");
+    else
+        msgbox.critical(this, "Failure", "An unexpected error occurred!");
 }
 
 void MainWindow::pack_clicked()
