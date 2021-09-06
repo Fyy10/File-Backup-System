@@ -5,6 +5,9 @@ project(File-Backup-System VERSION 0.1 LANGUAGES CXX)
 # add libraries
 add_subdirectory(core)
 add_subdirectory(extensions)
+# resource dir
+add_subdirectory(res)
+# include headers
 include_directories(
     core
     extensions
@@ -22,6 +25,9 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# the default is /usr/local to prevent destroying the system using `sudo make install`
+# set(CMAKE_INSTALL_PREFIX /usr)
 
 # QtCreator supports the following variables for Android, which are identical to qmake Android variables.
 # Check https://doc.qt.io/qt/deployment-android.html for more information.
@@ -74,3 +80,9 @@ set_target_properties(File-Backup-System PROPERTIES
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(File-Backup-System)
 endif()
+
+# install binary
+install(
+    TARGETS File-Backup-System
+    RUNTIME DESTINATION bin
+)

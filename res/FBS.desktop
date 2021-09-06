@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=FileBackup
+Exec=File-Backup-System
+Icon=FBS
+Categories=Development;
