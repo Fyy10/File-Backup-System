@@ -23,3 +23,11 @@ Run the following command to start the GUI:
 # in the build folder
 ./File-Backup-System
 ```
+
+## Release an AppImage
+
+Run the following command:
+
+```bash
+./release.sh
+```

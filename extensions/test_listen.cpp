@@ -2,6 +2,6 @@
 
 int main(int argc, char *argv[]) {
     Watcher watch(argv[1]);
-    watch.listen();
+    watch.handle_events();
     return 0;
 }
