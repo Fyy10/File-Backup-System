@@ -13,15 +13,23 @@
 
 using namespace std;
 
+struct watch_roots
+{
+    string source_root;
+    string target_root;
+};
+
+// a wrapper of Watcher, use watch_roots* as input
+void *listen_file_change(void*);
+
 class Watcher
 {
 public:
-    // the path of directory or file
-    Watcher(const char* target) : Watcher(string(target)) {}
-    Watcher(const string & target);
+    // source_root and target_root
+    Watcher(const char* source_root, const char* target_root) : Watcher(string(source_root), string(target_root)) {}
+    Watcher(const string & source_root, const string & target_root);
     ~Watcher();
 
-    string target;
     void add_watch(const char*);
     void add_watch(const string);
     void add_watch_recursive(const char*);
@@ -29,6 +37,10 @@ public:
     void handle_events();
 
 private:
+    // source root
+    string source_root;
+    // target root
+    string target_root;
     // file descripter
     int fd;
     // watch descripters

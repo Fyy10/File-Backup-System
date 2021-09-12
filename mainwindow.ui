@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>514</width>
-    <height>380</height>
+    <height>363</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="BackupButton">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>80</y>
+      <x>100</x>
+      <y>70</y>
       <width>271</width>
       <height>111</height>
      </rect>
@@ -30,8 +30,8 @@
    <widget class="QPushButton" name="RecoverButton">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>210</y>
+      <x>100</x>
+      <y>190</y>
       <width>271</width>
       <height>111</height>
      </rect>
@@ -125,45 +125,6 @@
     </property>
     <property name="text">
      <string>Browse</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="ZipOption">
-    <property name="geometry">
-     <rect>
-      <x>340</x>
-      <y>130</y>
-      <width>92</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Zip</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="PackOption">
-    <property name="geometry">
-     <rect>
-      <x>340</x>
-      <y>160</y>
-      <width>92</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Pack</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="AutoOption">
-    <property name="geometry">
-     <rect>
-      <x>340</x>
-      <y>190</y>
-      <width>121</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Auto Backup</string>
     </property>
    </widget>
   </widget>

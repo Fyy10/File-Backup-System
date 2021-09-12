@@ -6,11 +6,22 @@
 #include <iostream>
 #include <dirent.h>
 #include <string.h>
+#include <pthread.h>
 
 using namespace std;
 
-Watcher::Watcher(const string & target) {
-    this->target = target;
+void * listen_file_change(void * roots)
+{
+    struct watch_roots* source_target = (struct watch_roots*)roots;
+    Watcher watcher(source_target->source_root, source_target->target_root);
+    delete source_target;
+    watcher.handle_events();
+    return (void*)0;
+}
+
+Watcher::Watcher(const string & source_root, const string & target_root) {
+    this->source_root = source_root;
+    this->target_root = target_root;
 
     // create file descripter
     fd = inotify_init();
@@ -19,7 +30,7 @@ Watcher::Watcher(const string & target) {
         exit(1);
     }
 
-    add_watch_recursive(target);
+    add_watch_recursive(source_root);
 }
 
 Watcher::~Watcher() {

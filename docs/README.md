@@ -26,7 +26,7 @@ Run the following command to start the GUI:
 
 ## Release an AppImage
 
-Run the following command:
+Run the following command (you may need to modify the environment variables in the `release.sh` script first):
 
 ```bash
 ./release.sh

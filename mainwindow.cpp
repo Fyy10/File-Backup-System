@@ -15,10 +15,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->BackupButton, &QPushButton::clicked, this, &MainWindow::backup_clicked);
     // recover clicked
     connect(ui->RecoverButton, &QPushButton::clicked, this, &MainWindow::recover_clicked);
-    // select pack
-    connect(ui->PackOption, &QCheckBox::clicked, this, &MainWindow::pack_clicked);
-    // select auto
-    connect(ui->AutoOption, &QCheckBox::clicked, this, &MainWindow::auto_clicked);
     // browse source clicked
     connect(ui->BrowseSource, &QPushButton::clicked, this, &MainWindow::browse_source_clicked);
     // browse target clicked
@@ -54,7 +50,16 @@ void MainWindow::backup_clicked()
     QMessageBox msgbox;
     bool succ_flag = build_generator(LocalGenerator(ui->SourcePath->text().toStdString(), ui->TargetPath->text().toStdString()), FileFilter(), Duplicator());
     if (succ_flag)
+    {
+        // listen file change
+        pthread_t tid;
+        struct watch_roots* tmp = new struct watch_roots;
+        tmp->source_root = ui->SourcePath->text().toStdString();
+        tmp->target_root = ui->TargetPath->text().toStdString();
+        pthread_create(&tid, NULL, listen_file_change, (void*)tmp);
+
         msgbox.information(this, "Success", "Backup done!");
+    }
     else
         msgbox.critical(this, "Failure", "An unexpected error occurred!");
 }
@@ -67,28 +72,4 @@ void MainWindow::recover_clicked()
         msgbox.information(this, "Success", "Recover done!");
     else
         msgbox.critical(this, "Failure", "An unexpected error occurred!");
-}
-
-void MainWindow::pack_clicked()
-{
-    if (ui->PackOption->checkState() == Qt::Checked)
-    {
-        ui->AutoOption->setCheckState(Qt::Unchecked);
-    }
-    else
-    {
-        // uncheck
-    }
-}
-
-void MainWindow::auto_clicked()
-{
-    if (ui->AutoOption->checkState() == Qt::Checked)
-    {
-        ui->PackOption->setCheckState(Qt::Unchecked);
-    }
-    else
-    {
-        // uncheck
-    }
 }
