@@ -12,18 +12,16 @@ class Generator
     public:
     
     Generator(const char * oldpath, const char * newpath) 
-        : Generator(std::string(oldpath), std::string(newpath)) {}
+        : Generator(std::string(oldpath), std::string(newpath), FileFilter()) {}
     Generator(const std::string & oldpath, const std::string & newpath)
-        : oldpath(oldpath), newpath(newpath) {
-            initialize();
-        }
+        : Generator(oldpath, newpath, FileFilter()) {}
+    Generator(const std::string & oldpath, const std::string & newpath,const FileFilter & f)
+        : oldpath(oldpath), newpath(newpath), filter(f) {  initialize();   }
     ~Generator() = default;
 
-    bool build(const FileFilter & filter, Export & destination); 
+    bool build(Export & destination); 
 
     protected:
-
-    virtual bool errorProcessing() = 0;
 
     bool isparentdir(const char * path)
     {
@@ -33,21 +31,24 @@ class Generator
     }
     void initialize();    
 
-    bool autobuild(std::string & src, std::string & dest,
-        const FileFilter & filter, Export & destination);
+    bool autobuild(std::string & src, std::string & dest, Export & destination);
     
     virtual bool create_normal_file(std::string & src, std::string & dest,
-        struct stat & src_file_state, const FileFilter & filter, Export & destination) = 0;
+        struct stat & src_file_state, Export & destination) = 0;
 
     virtual bool recursion_of_dir(std::string & src, std::string & dest,
-        struct stat & src_file_state, const FileFilter & filter, Export & destination) = 0;
+        struct stat & src_file_state, Export & destination) = 0;
 
     virtual bool create_soft_link(std::string & src, std::string & dest,
-        struct stat & src_file_state, const FileFilter & filter, Export & destination) = 0;
+        struct stat & src_file_state, Export & destination) = 0;
     
+    virtual bool errorProcessing() = 0;
+
     int add_inodes(const char * src, const char * dest, struct stat & src_file_state);
 
     protected:
+
+    FileFilter filter;
     std::string oldpath, newpath;
     std::map<ino_t, std::pair<ino_t, std::string>> inodes_map;
 
