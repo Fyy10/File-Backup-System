@@ -20,8 +20,12 @@ void * listen_file_change(void * roots)
 }
 
 Watcher::Watcher(const string & source_root, const string & target_root) {
+    // assume absolute path
     this->source_root = source_root;
     this->target_root = target_root;
+    // remove the suffix '/'
+    if (this->source_root.rfind('/') == this->source_root.length() - 1) this->source_root.pop_back();
+    if (this->target_root.rfind('/') == this->target_root.length() - 1) this->target_root.pop_back();
 
     // create file descripter
     fd = inotify_init();
@@ -121,27 +125,52 @@ void Watcher::handle_events() {
             if (event->len)
             {
                 const string event_path = wd_to_path[event->wd] + '/' + event->name;
+                // use rfind to preserve the source dir name
+                // Example:
+                // source_root: /home/jeff/data
+                // target_root: /home/jeff/data_backup
+                // event_path: /home/jeff/data/xxx
+                // target_path: /home/jeff/data_backup/data/xxx
+                const string target_path = target_root + (event_path.c_str() + source_root.rfind('/'));
                 if (event->mask & IN_CREATE)
                 {
                     if (event->mask & IN_ISDIR)
                     {
                         cout << "Directory " << event_path << " created" << endl;
                         add_watch(event_path);
+                        cout << "Copy directory " << event_path << " to " << target_path << endl;
                     }
-                    else cout << "File " << event_path << " created" << endl;
+                    else
+                    {
+                        cout << "File " << event_path << " created" << endl;
+                        cout << "Copy file " << event_path << " to " << target_path << endl;
+                    }
                 }
                 else if (event->mask & IN_DELETE)
                 {
                     if (event->mask & IN_ISDIR)
                     {
                         cout << "Directory " << event_path << " deleted" << endl;
+                        cout << "Remove direcory " << target_path << endl;
                     }
-                    else cout << "File " << event_path << " deleted" << endl;
+                    else
+                    {
+                        cout << "File " << event_path << " deleted" << endl;
+                        cout << "Remove file " << target_path << endl;
+                    }
                 }
                 else if (event->mask & IN_MODIFY)
                 {
-                    if (event->mask & IN_ISDIR) cout << "Directory " << event_path << " modified" << endl;
-                    else cout << "File " << event_path << " modified" << endl;
+                    if (event->mask & IN_ISDIR)
+                    {
+                        cout << "Directory " << event_path << " modified" << endl;
+                        cout << "Update directory " << event_path << " to " << target_path << endl;
+                    }
+                    else
+                    {
+                        cout << "File " << event_path << " modified" << endl;
+                        cout << "Update file " << event_path << " to " << target_path << endl;
+                    }
                 }
                 else if (event->mask & IN_DELETE_SELF)
                 {

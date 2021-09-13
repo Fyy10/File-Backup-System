@@ -42,7 +42,8 @@ void MainWindow::browse_target_clicked()
 
 bool MainWindow::build_generator(Generator && g, FileFilter && f, Export && e)
 {
-    return g.build(f, e);
+    // return g.build(f, e);
+    return g.build(e);
 }
 
 void MainWindow::backup_clicked()

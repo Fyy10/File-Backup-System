@@ -5,16 +5,19 @@ project(File-Backup-System VERSION 0.1 LANGUAGES CXX)
 # add libraries
 add_subdirectory(core)
 add_subdirectory(extensions)
+add_subdirectory(net)
 # resource dir
 add_subdirectory(res)
 # include headers
 include_directories(
     core
     extensions
+    net
 )
 set(FBS_LIBS
     core
     extensions
+    net
 )
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

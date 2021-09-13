@@ -10,7 +10,7 @@
 using namespace std;
 
 bool LocalGenerator::create_normal_file(std::string & src, std::string & dest,
-    struct stat & src_file_state, const FileFilter & filter, Export & destination)
+    struct stat & src_file_state, Export & destination)
 {
     int source_file_id, dest_file_id, result;
 
@@ -48,7 +48,7 @@ bool LocalGenerator::create_normal_file(std::string & src, std::string & dest,
 }
 
 bool LocalGenerator::recursion_of_dir(std::string & src, std::string & dest,
-    struct stat & src_file_state, const FileFilter & filter, Export & destination)
+    struct stat & src_file_state, Export & destination)
 {
     DIR * src_directory;
     struct dirent * src_dirent;
@@ -70,7 +70,7 @@ bool LocalGenerator::recursion_of_dir(std::string & src, std::string & dest,
         if(isparentdir(src_dirent->d_name)) continue;
         newsrc = src + '/' + src_dirent->d_name;
         newdest = dest + '/' + src_dirent->d_name;
-        if(!autobuild(newsrc, newdest, filter, destination))
+        if(!autobuild(newsrc, newdest, destination))
         {
             closedir(src_directory);
             return false;
@@ -82,7 +82,7 @@ bool LocalGenerator::recursion_of_dir(std::string & src, std::string & dest,
 }
 
 bool LocalGenerator::create_soft_link(std::string & src, std::string & dest,
-    struct stat & src_file_state, const FileFilter & filter, Export & destination)
+    struct stat & src_file_state, Export & destination)
 {
     int n;
     char buf[1024];
