@@ -8,7 +8,6 @@ bool FileFilter::ismatch(const struct stat & state, const char * name) const
     if(!std::regex_match(name, typefilter) || \
             compareTime(state.st_mtim) < 0) return false;
     else return true;
-    return true;
 }
 
 int FileFilter::compareTime(const timespec & compareto) const

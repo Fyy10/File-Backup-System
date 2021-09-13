@@ -4,7 +4,7 @@
 class Export
 {
     public:
-    virtual int exportContent(int src, int dest) = 0;
+    virtual int exportContent(int src, int dest, const char * ) = 0;
     virtual ~Export() = default;
 };
 

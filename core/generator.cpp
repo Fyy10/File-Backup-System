@@ -17,21 +17,20 @@ void Generator::initialize()
     else newpath = newpath + '/' + oldpath;
 }
 
-bool Generator::autobuild(string & src,
-    string & dest, const FileFilter & filter, Export & destination)
+bool Generator::autobuild(string & src, string & dest, Export & destination)
 {
     struct stat src_file_state;
 
     if(lstat(src.c_str(), &src_file_state)) return false;
 
     if(S_ISREG(src_file_state.st_mode))
-        return create_normal_file(src, dest, src_file_state, filter, destination);
+        return create_normal_file(src, dest, src_file_state, destination);
 
     else if(S_ISDIR(src_file_state.st_mode))
-        return recursion_of_dir(src, dest, src_file_state, filter, destination);
+        return recursion_of_dir(src, dest, src_file_state, destination);
 
     else if(S_ISLNK(src_file_state.st_mode))
-        return create_soft_link(src, dest, src_file_state, filter, destination);
+        return create_soft_link(src, dest, src_file_state, destination);
 
     return true;
 }
@@ -42,14 +41,14 @@ int Generator::add_inodes(const char * src, const char * dest, struct stat & src
     inodes_map[src_file_state.st_ino] = make_pair(dest_file_state.st_ino, dest);
     return 0;
 }
-bool Generator::build(const FileFilter & filter, Export & destination)
+bool Generator::build(Export & destination)
 {
     if(access(newpath.c_str(), F_OK) == 0) 
     {
         printf("Operation failed : Destination exists\n");
         return false;
     }
-    if(autobuild(oldpath, newpath, filter, destination) == false)
+    if(autobuild(oldpath, newpath, destination) == false)
         return errorProcessing();
     return true;
 }
