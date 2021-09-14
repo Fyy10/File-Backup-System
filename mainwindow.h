@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "core.hpp"
 #include "extensions.hpp"
+#include <map>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,10 +23,15 @@ private slots:
     void browse_target_clicked();
     void backup_clicked();
     void recover_clicked();
+    void verify_clicked();
+
+    // user settings
+    void time_clicked();
+    void user_filter_clicked();
 
 private:
     Ui::MainWindow *ui;
 
-    bool build_generator(Generator && g, FileFilter && f, Export && e);
+    map<int, string> filter_table;
 };
 #endif // MAINWINDOW_H
