@@ -1,4 +1,6 @@
 #include "listen_file_change.hpp"
+#include "localgenerator.hpp"
+#include "duplicator.hpp"
 #include <string>
 #include <sys/inotify.h>
 #include <sys/stat.h>
@@ -60,7 +62,7 @@ void Watcher::add_watch(const string target)
     string path = target;
     if (path.rfind('/') == path.length() - 1) path.pop_back();
     // add watch (only watch directories)
-    int wd = inotify_add_watch(fd, path.c_str(), IN_MODIFY | IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+    int wd = inotify_add_watch(fd, path.c_str(), IN_MODIFY | IN_CREATE | IN_DELETE | IN_DELETE_SELF | IN_ATTRIB);
     if (wd < 0) {
         cout << "Error adding watches" << endl;
         exit(2);
@@ -70,7 +72,7 @@ void Watcher::add_watch(const string target)
     watches.push_back(wd);
     wd_to_path[wd] = path;
 
-    cout << "Listening " << wd_to_path[wd] << endl;
+    // cout << "Listening " << wd_to_path[wd] << endl;
 }
 
 void Watcher::add_watch_recursive(const string target)
@@ -130,52 +132,98 @@ void Watcher::handle_events() {
                 // source_root: /home/jeff/data
                 // target_root: /home/jeff/data_backup
                 // event_path: /home/jeff/data/xxx
-                // target_path: /home/jeff/data_backup/data/xxx
-                const string target_path = target_root + (event_path.c_str() + source_root.rfind('/'));
+                // target_path_full: /home/jeff/data_backup/data/xxx
+                // target_path_dir: /home/jeff/data_backup/data
+                string target_path_tmp = target_root + (event_path.c_str() + source_root.rfind('/'));
+                const string target_path_full = target_path_tmp;
+                // remove the last filename from target_path_tmp
+                while (target_path_tmp[target_path_tmp.length() - 1] != '/') target_path_tmp.pop_back();
+                target_path_tmp.pop_back();
+                const string target_path_dir = target_path_tmp;
+
                 if (event->mask & IN_CREATE)
                 {
                     if (event->mask & IN_ISDIR)
                     {
-                        cout << "Directory " << event_path << " created" << endl;
+                        // cout << "Directory " << event_path << " created" << endl;
                         add_watch(event_path);
-                        cout << "Copy directory " << event_path << " to " << target_path << endl;
+
+                        // if a dir is created, do not copy it recursively, just create and change attributes instead
+                        mkdir(target_path_full.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+                        // todo: change attr
+
+                        // cout << "Copy directory " << event_path << " to " << target_path_full << endl;
                     }
                     else
                     {
-                        cout << "File " << event_path << " created" << endl;
-                        cout << "Copy file " << event_path << " to " << target_path << endl;
+                        // cout << "File " << event_path << " created" << endl;
+
+                        // copy file
+                        LocalGenerator g = LocalGenerator(event_path, target_path_dir);
+                        Duplicator e;
+                        g.build(e);
+
+                        // cout << "Copy file " << event_path << " to " << target_path_full << endl;
                     }
                 }
                 else if (event->mask & IN_DELETE)
                 {
                     if (event->mask & IN_ISDIR)
                     {
-                        cout << "Directory " << event_path << " deleted" << endl;
-                        cout << "Remove direcory " << target_path << endl;
+                        // cout << "Directory " << event_path << " deleted" << endl;
+
+                        // remove dir
+                        remove(target_path_full.c_str());
+
+                        // cout << "Remove direcory " << target_path_full << endl;
                     }
                     else
                     {
-                        cout << "File " << event_path << " deleted" << endl;
-                        cout << "Remove file " << target_path << endl;
+                        // cout << "File " << event_path << " deleted" << endl;
+
+                        // remove file
+                        remove(target_path_full.c_str());
+
+                        // cout << "Remove file " << target_path_full << endl;
                     }
                 }
                 else if (event->mask & IN_MODIFY)
                 {
                     if (event->mask & IN_ISDIR)
                     {
+                        // this will never happen, since IN_MODIFY only works for files
+                        cout << "Warning: unexpected behavior" << endl;
                         cout << "Directory " << event_path << " modified" << endl;
-                        cout << "Update directory " << event_path << " to " << target_path << endl;
+
+                        // LocalGenerator g = LocalGenerator(event_path, target_path_dir);
+                        // Duplicator e;
+                        // g.build(e);
+
+                        cout << "Update directory " << event_path << " to " << target_path_full << endl;
                     }
                     else
                     {
-                        cout << "File " << event_path << " modified" << endl;
-                        cout << "Update file " << event_path << " to " << target_path << endl;
+                        // cout << "File " << event_path << " modified" << endl;
+
+                        // remove file
+                        remove(target_path_full.c_str());
+
+                        // copy file
+                        LocalGenerator g = LocalGenerator(event_path, target_path_dir);
+                        Duplicator e;
+                        g.build(e);
+
+                        // cout << "Update file " << event_path << " to " << target_path_full << endl;
                     }
                 }
                 else if (event->mask & IN_DELETE_SELF)
                 {
                     watches.remove(event->wd);
                     wd_to_path.erase(event->wd);
+                }
+                else if (event->mask & IN_ATTRIB)
+                {
+                    // todo: change attr
                 }
             }
             i += EVENT_SIZE + event->len;
