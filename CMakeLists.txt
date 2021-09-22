@@ -53,6 +53,12 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        loginwindow.cpp
+        loginwindow.h
+        loginwindow.ui
+        signwindow.cpp
+        signwindow.h
+        signwindow.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

@@ -4,6 +4,7 @@
 #include <QFileDialog>
 
 #include <string>
+#include <time.h>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -62,7 +63,7 @@ void MainWindow::backup_clicked()
 {
     QMessageBox msgbox;
 
-    // filter settings
+    // file filter
     string filter;
     if (ui->UserFilterOption->isChecked())
     {
@@ -73,7 +74,29 @@ void MainWindow::backup_clicked()
         filter = filter_table[ui->FilterBox->currentIndex()];
     }
 
-    FileFilter ff(filter, {0, 0});
+    // time filter
+    time_t time_filter;
+    if (ui->DateEdit->isEnabled() && ui->TimeEdit->isEnabled())
+    {
+        struct tm date_time;
+        // date
+        // printf("%s\n", ui->DateEdit->text().toStdString().c_str());
+        sscanf(ui->DateEdit->text().toStdString().c_str(), "%d/%d/%d", &date_time.tm_year, &date_time.tm_mon, &date_time.tm_mday);
+        date_time.tm_year -= 1900;
+        date_time.tm_mon -= 1;
+        // time
+        // printf("%s\n", ui->TimeEdit->text().toStdString().c_str());
+        sscanf(ui->TimeEdit->text().toStdString().c_str(), "%d:%d", &date_time.tm_hour, &date_time.tm_min);
+        date_time.tm_isdst = 0;
+        time_filter = mktime(&date_time);
+    }
+    else
+    {
+        // no time filter
+        time_filter = 0;
+    }
+
+    FileFilter ff(filter, {time_filter, 0});
 
     LocalGenerator g = LocalGenerator(ui->SourcePath->text().toStdString(), ui->TargetPath->text().toStdString(), ff);
     Duplicator e;
@@ -86,6 +109,7 @@ void MainWindow::backup_clicked()
         struct watch_roots* tmp = new struct watch_roots;
         tmp->source_root = ui->SourcePath->text().toStdString();
         tmp->target_root = ui->TargetPath->text().toStdString();
+        tmp->ff = ff;
         pthread_create(&tid, NULL, listen_file_change, (void*)tmp);
 
         msgbox.information(this, "Success", "Backup done!");
