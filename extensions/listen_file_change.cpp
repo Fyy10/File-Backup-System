@@ -1,6 +1,4 @@
 #include "listen_file_change.hpp"
-#include "localgenerator.hpp"
-#include "duplicator.hpp"
 #include <string>
 #include <sys/inotify.h>
 #include <sys/stat.h>
@@ -15,16 +13,33 @@ using namespace std;
 void * listen_file_change(void * roots)
 {
     struct watch_roots* source_target = (struct watch_roots*)roots;
-    Watcher watcher(source_target->source_root, source_target->target_root);
+    Watcher watcher(source_target->source_root, source_target->target_root, source_target->ff);
     delete source_target;
     watcher.handle_events();
     return (void*)0;
 }
 
-Watcher::Watcher(const string & source_root, const string & target_root) {
+int make_directory(const char * src, const char * dest)
+{
+    struct stat file_state;
+    if(lstat(src, &file_state)) return -1;
+    if(mkdir(dest, 0777)) return -1;
+    return (StatSetter::updateAttributes(dest, file_state));
+}
+
+int change_attr(const char * src, const char * dest)
+{
+    struct stat file_state;
+    if(lstat(src, &file_state)) return -1;
+    return (StatSetter::updateAttributes(dest, file_state));
+}
+
+Watcher::Watcher(const string & source_root, const string & target_root, FileFilter ff) {
     // assume absolute path
     this->source_root = source_root;
     this->target_root = target_root;
+    // file fileter
+    this->ff = ff;
     // remove the suffix '/'
     if (this->source_root.rfind('/') == this->source_root.length() - 1) this->source_root.pop_back();
     if (this->target_root.rfind('/') == this->target_root.length() - 1) this->target_root.pop_back();
@@ -62,7 +77,7 @@ void Watcher::add_watch(const string target)
     string path = target;
     if (path.rfind('/') == path.length() - 1) path.pop_back();
     // add watch (only watch directories)
-    int wd = inotify_add_watch(fd, path.c_str(), IN_MODIFY | IN_CREATE | IN_DELETE | IN_DELETE_SELF | IN_ATTRIB);
+    int wd = inotify_add_watch(fd, path.c_str(), IN_MODIFY | IN_CREATE | IN_DELETE | IN_DELETE_SELF | IN_ATTRIB | IN_CLOSE_WRITE);
     if (wd < 0) {
         cout << "Error adding watches" << endl;
         exit(2);
@@ -149,8 +164,7 @@ void Watcher::handle_events() {
                         add_watch(event_path);
 
                         // if a dir is created, do not copy it recursively, just create and change attributes instead
-                        mkdir(target_path_full.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-                        // todo: change attr
+                        make_directory(event_path.c_str(), target_path_full.c_str());
 
                         // cout << "Copy directory " << event_path << " to " << target_path_full << endl;
                     }
@@ -159,7 +173,7 @@ void Watcher::handle_events() {
                         // cout << "File " << event_path << " created" << endl;
 
                         // copy file
-                        LocalGenerator g = LocalGenerator(event_path, target_path_dir);
+                        LocalGenerator g = LocalGenerator(event_path, target_path_dir, ff);
                         Duplicator e;
                         g.build(e);
 
@@ -173,6 +187,7 @@ void Watcher::handle_events() {
                         // cout << "Directory " << event_path << " deleted" << endl;
 
                         // remove dir
+                        // todo: use filter
                         remove(target_path_full.c_str());
 
                         // cout << "Remove direcory " << target_path_full << endl;
@@ -182,12 +197,13 @@ void Watcher::handle_events() {
                         // cout << "File " << event_path << " deleted" << endl;
 
                         // remove file
+                        // todo: use filter
                         remove(target_path_full.c_str());
 
                         // cout << "Remove file " << target_path_full << endl;
                     }
                 }
-                else if (event->mask & IN_MODIFY)
+                else if (event->mask & (IN_MODIFY | IN_CLOSE_WRITE))
                 {
                     if (event->mask & IN_ISDIR)
                     {
@@ -195,7 +211,7 @@ void Watcher::handle_events() {
                         cout << "Warning: unexpected behavior" << endl;
                         cout << "Directory " << event_path << " modified" << endl;
 
-                        // LocalGenerator g = LocalGenerator(event_path, target_path_dir);
+                        // LocalGenerator g = LocalGenerator(event_path, target_path_dir, ff);
                         // Duplicator e;
                         // g.build(e);
 
@@ -206,10 +222,11 @@ void Watcher::handle_events() {
                         // cout << "File " << event_path << " modified" << endl;
 
                         // remove file
+                        // todo: use filter
                         remove(target_path_full.c_str());
 
                         // copy file
-                        LocalGenerator g = LocalGenerator(event_path, target_path_dir);
+                        LocalGenerator g = LocalGenerator(event_path, target_path_dir, ff);
                         Duplicator e;
                         g.build(e);
 
@@ -223,7 +240,8 @@ void Watcher::handle_events() {
                 }
                 else if (event->mask & IN_ATTRIB)
                 {
-                    // todo: change attr
+                    // change attr
+                    change_attr(event_path.c_str(), target_path_full.c_str());
                 }
             }
             i += EVENT_SIZE + event->len;
