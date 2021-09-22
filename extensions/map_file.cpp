@@ -23,7 +23,7 @@ map<string, string> MapFile::load()
 {
     FILE* file = fopen(file_path.c_str(), "r");
     map<string, string> file_map;
-    char s1[STRLEN], s2[STRLEN];
+    char s1[STRLEN_MAP_FILE], s2[STRLEN_MAP_FILE];
     while (1)
     {
         fscanf(file, "%s %s\n", s1, s2);

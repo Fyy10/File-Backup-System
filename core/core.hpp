@@ -3,3 +3,4 @@
 #include "localgenerator.hpp"
 #include "duplicator.hpp"
 #include "filter.hpp"
+#include "setter.hpp"

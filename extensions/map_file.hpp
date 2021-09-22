@@ -4,7 +4,7 @@
 
 #include <string>
 #include <map>
-#define STRLEN 64
+#define STRLEN_MAP_FILE 64
 
 using namespace std;
 
