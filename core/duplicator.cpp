@@ -2,7 +2,7 @@
 #include <string.h>
 #include "duplicator.hpp"
 
-int Duplicator::exportContent(int src, int dest)
+int Duplicator::exportContent(int src, int dest, const char * key)
 {
     int n;
     char buffer[BUFFSIZE];

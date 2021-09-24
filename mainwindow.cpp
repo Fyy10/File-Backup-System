@@ -45,6 +45,12 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+int MainWindow::set_passwd(const string passwd)
+{
+    this->passwd = passwd;
+    return 0;
+}
+
 void MainWindow::browse_source_clicked()
 {
     QFileDialog file_diag;
@@ -98,8 +104,9 @@ void MainWindow::backup_clicked()
 
     FileFilter ff(filter, {time_filter, 0});
 
-    LocalGenerator g = LocalGenerator(ui->SourcePath->text().toStdString(), ui->TargetPath->text().toStdString(), ff);
-    Duplicator e;
+    LocalGenerator g = LocalGenerator(ui->SourcePath->text().toStdString(), ui->TargetPath->text().toStdString(), passwd, ff);
+    // Duplicator e;
+    ExportEncodeEncrypt e;
     bool succ_flag = g.build(e);
 
     if (succ_flag)
@@ -109,6 +116,7 @@ void MainWindow::backup_clicked()
         struct watch_roots* tmp = new struct watch_roots;
         tmp->source_root = ui->SourcePath->text().toStdString();
         tmp->target_root = ui->TargetPath->text().toStdString();
+        tmp->passwd = passwd;
         tmp->ff = ff;
         pthread_create(&tid, NULL, listen_file_change, (void*)tmp);
 
@@ -122,8 +130,9 @@ void MainWindow::recover_clicked()
 {
     QMessageBox msgbox;
 
-    LocalGenerator g = LocalGenerator(ui->TargetPath->text().toStdString(), ui->SourcePath->text().toStdString());
-    Duplicator e;
+    LocalGenerator g = LocalGenerator(ui->TargetPath->text().toStdString(), ui->SourcePath->text().toStdString(), passwd);
+    // Duplicator e;
+    ExportDecodeDecrypt e;
     bool succ_flag = g.build(e);
 
     if (succ_flag)

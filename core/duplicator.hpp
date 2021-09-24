@@ -7,7 +7,7 @@ class Duplicator : public Export
 {
 
     public:
-    virtual int exportContent(int src, int dest);
+    virtual int exportContent(int src, int dest, const char * key);
     private:
     enum {BUFFSIZE = 1 << 12};
 };

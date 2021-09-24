@@ -18,6 +18,7 @@ struct watch_roots
 {
     string source_root;
     string target_root;
+    string passwd;
     FileFilter ff;
 };
 
@@ -28,8 +29,9 @@ class Watcher
 {
 public:
     // source_root and target_root
-    Watcher(const char* source_root, const char* target_root, FileFilter = FileFilter()) : Watcher(string(source_root), string(target_root)) {}
-    Watcher(const string & source_root, const string & target_root, FileFilter = FileFilter());
+    Watcher(const char* source_root, const char* target_root, const char* passwd, FileFilter = FileFilter()) :
+        Watcher(string(source_root), string(target_root), string(passwd)) {}
+    Watcher(const string & source_root, const string & target_root, const string & passwd, FileFilter = FileFilter());
     ~Watcher();
 
     void add_watch(const char*);
@@ -49,6 +51,8 @@ private:
     list<int> watches;
     // map wd to file path
     map<int, string> wd_to_path;
+    // password
+    string passwd;
     // file filter
     FileFilter ff;
 };

@@ -7,13 +7,14 @@
 #include <dirent.h>
 #include <string.h>
 #include <pthread.h>
+#include "code_crypt.hpp"
 
 using namespace std;
 
 void * listen_file_change(void * roots)
 {
     struct watch_roots* source_target = (struct watch_roots*)roots;
-    Watcher watcher(source_target->source_root, source_target->target_root, source_target->ff);
+    Watcher watcher(source_target->source_root, source_target->target_root, source_target->passwd, source_target->ff);
     delete source_target;
     watcher.handle_events();
     return (void*)0;
@@ -34,10 +35,12 @@ int change_attr(const char * src, const char * dest)
     return (StatSetter::updateAttributes(dest, file_state));
 }
 
-Watcher::Watcher(const string & source_root, const string & target_root, FileFilter ff) {
+Watcher::Watcher(const string & source_root, const string & target_root, const string & passwd, FileFilter ff) {
     // assume absolute path
     this->source_root = source_root;
     this->target_root = target_root;
+    // passwd
+    this->passwd = passwd;
     // file fileter
     this->ff = ff;
     // remove the suffix '/'
@@ -173,8 +176,9 @@ void Watcher::handle_events() {
                         // cout << "File " << event_path << " created" << endl;
 
                         // copy file
-                        LocalGenerator g = LocalGenerator(event_path, target_path_dir, ff);
-                        Duplicator e;
+                        LocalGenerator g = LocalGenerator(event_path, target_path_dir, passwd, ff);
+                        // Duplicator e;
+                        ExportEncodeEncrypt e;
                         g.build(e);
 
                         // cout << "Copy file " << event_path << " to " << target_path_full << endl;
@@ -226,8 +230,9 @@ void Watcher::handle_events() {
                         remove(target_path_full.c_str());
 
                         // copy file
-                        LocalGenerator g = LocalGenerator(event_path, target_path_dir, ff);
-                        Duplicator e;
+                        LocalGenerator g = LocalGenerator(event_path, target_path_dir, passwd, ff);
+                        // Duplicator e;
+                        ExportEncodeEncrypt e;
                         g.build(e);
 
                         // cout << "Update file " << event_path << " to " << target_path_full << endl;

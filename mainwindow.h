@@ -5,6 +5,9 @@
 #include "core.hpp"
 #include "extensions.hpp"
 #include <map>
+#include <string>
+
+using namespace std;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -17,6 +20,8 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+    int set_passwd(const string);
 
 private slots:
     void browse_source_clicked();
@@ -33,5 +38,7 @@ private:
     Ui::MainWindow *ui;
 
     map<int, string> filter_table;
+
+    string passwd;
 };
 #endif // MAINWINDOW_H

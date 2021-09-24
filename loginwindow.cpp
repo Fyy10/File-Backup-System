@@ -35,6 +35,7 @@ void LoginWindow::login_clicked()
     if (usernames.find(ui->AccountEdit->text().toStdString()) != usernames.end())
     {
         msgbox.information(this, "Login", "Welcome, " + ui->AccountEdit->text() + "!");
+        w->set_passwd(ui->PasswdEdit->text().toStdString());
         w->show();
         this->close();
     }

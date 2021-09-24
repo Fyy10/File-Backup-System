@@ -34,7 +34,7 @@ bool LocalGenerator::create_normal_file(std::string & src, std::string & dest,
     }
 
 /*  调用输出类将按指定方式导出内容到目标文件，更新文件属性，执行完成后关闭文件描述符号    */
-    result = destination.exportContent(source_file_id, dest_file_id);
+    result = destination.exportContent(source_file_id, dest_file_id, key.c_str());
     result = result ? result : \
         StatSetter::updateAttributes(dest.c_str(),src_file_state);
 
@@ -93,6 +93,15 @@ bool LocalGenerator::create_soft_link(std::string & src, std::string & dest,
     return (0 == StatSetter::updateOwnnerTime(dest.c_str(), src_file_state));
 }
 
+bool LocalGenerator::create_fifo_pipe(std::string & src, std::string & dest,
+    struct stat & src_file_state, Export & destination)
+{
+    if(mkfifo(dest.c_str(), 0777) || \
+        add_inodes(src.c_str(), dest.c_str(), src_file_state)) return false;
+    
+    return (0 == StatSetter::updateOwnnerTime(dest.c_str(), src_file_state));
+}
+
 bool LocalGenerator::errorProcessing()
 {
     perror("Operation failed");
@@ -101,6 +110,8 @@ bool LocalGenerator::errorProcessing()
     else printf("\tfinish\n");
     return false;
 }
+
+
 
 bool LocalGenerator::Remove(string & path)
 {
@@ -124,10 +135,10 @@ bool LocalGenerator::Remove(string & path)
             }
         }
         closedir(directory);
-        if(remove(path.c_str())) return false;
+        if(::remove(path.c_str())) return false;
         return true;
     }
-    else if(remove(path.c_str())) return false;
+    else if(::remove(path.c_str())) return false;
     return true;
 
 }
