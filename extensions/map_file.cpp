@@ -27,7 +27,20 @@ map<string, string> MapFile::load()
     while (1)
     {
         fscanf(file, "%s %s\n", s1, s2);
-        file_map[s1] = s2;
+
+        // replace * with ' '
+        for (int i = 0; s1[i] != '\0'; i++)
+        {
+            if (s1[i] == '*') s1[i] = ' ';
+        }
+        for (int i = 0; s2[i] != '\0'; i++)
+        {
+            if (s2[i] == '*') s2[i] = ' ';
+        }
+
+        // do not load head notification
+        if (s1 != string("__JSON__")) file_map[s1] = s2;
+
         if (feof(file)) break;
     }
     fclose(file);
@@ -40,7 +53,19 @@ int MapFile::save(map<string, string>& data)
 
     for (map<string, string>::const_iterator iter = data.begin(); iter != data.end(); iter++)
     {
-        fprintf(file, "%s %s\n", iter->first.c_str(), iter->second.c_str());
+        string s1 = iter->first, s2 = iter->second;
+
+        // replace ' ' with *
+        for (int i = 0; s1[i] != '\0'; i++)
+        {
+            if (s1[i] == ' ') s1[i] = '*';
+        }
+        for (int i = 0; s2[i] != '\0'; i++)
+        {
+            if (s2[i] == ' ') s2[i] = '*';
+        }
+
+        fprintf(file, "%s %s\n", s1.c_str(), s2.c_str());
     }
 
     fclose(file);
