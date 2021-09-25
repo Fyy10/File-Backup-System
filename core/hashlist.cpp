@@ -9,7 +9,7 @@ string HashList::gethashcode(const string & path)
     int n;
     FILE * pfile;
     char hashcode[64];
-    string md5sum = "md5sum " + path + " | awk \'{print $1}\'";
+    string md5sum = "md5sum '" + path + "' | awk \'{print $1}\'";
     
     if((pfile = popen(md5sum.c_str(), "r")) == nullptr) goto fail;
 
