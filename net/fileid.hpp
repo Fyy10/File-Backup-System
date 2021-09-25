@@ -17,7 +17,6 @@ class file_id
     }
     ~file_id() 
     {
-        printf("close %d\n", fd);
         close(fd);
     }
 

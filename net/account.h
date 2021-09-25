@@ -4,9 +4,12 @@
 #define LENGTH 32
 
 struct account {
-    unsigned int user_id;
+    union 
+    {
+        unsigned int user_id;
+        char request[4];
+    };
     char password[LENGTH];
 };
-
 
 #endif

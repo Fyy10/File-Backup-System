@@ -6,10 +6,10 @@
 
 #include "fileid.hpp"
 #include "netbase.hpp"
+#include "hashlist.hpp"
 
 int NetBase::service_recive(int socket_id, Service::protocol_header * request)
 {
-    printf("%s %s\n", request->file_name, request->request);
 /*  接收请求协议头，根据请求类型执行不同操作，读取失败返回错误码    */
     if(strcmp(request->request, "file") == 0) return recive_normal_file(socket_id, request);
     
@@ -19,7 +19,7 @@ int NetBase::service_recive(int socket_id, Service::protocol_header * request)
     
     else if(!strcmp(request->request, "soft")) return recive_soft_link(socket_id, request);
     
-    else if(!strcmp(request->request, "fifo")) return recive_fifo_pipe(socket_id, request);
+    else if(!strcmp(request->request, "pipe")) return recive_fifo_pipe(socket_id, request);
 
     else return 0;
 
@@ -30,6 +30,8 @@ int NetBase::recive_normal_file(int socket_id, Service::protocol_header * reques
     int dest_fd, result, n;
     struct stat file_state;
     char buffer[4096];
+
+    if(recive_code(socket_id, request) != 0) return Fail;
 
     file_id tempfd(request->file_name, O_WRONLY | O_CREAT, 0644);
 
@@ -58,6 +60,8 @@ int NetBase::recive_hard_link(int socket_id, Service::protocol_header * request)
     char buffer[256];
     struct stat file_state;
 
+    if(recive_code(socket_id, request) != 0) return Fail;
+
     if(read(socket_id, &file_state, sizeof(file_state)) != sizeof(file_state))
         return eRead;
 
@@ -66,7 +70,6 @@ int NetBase::recive_hard_link(int socket_id, Service::protocol_header * request)
 /*  读取链接到源文件名，建立硬链接，处理文件状态信息    */
     if(read(socket_id, buffer, request->length) != request->length) return eRead;
 
-    printf("name %s\n", buffer);
     if(link(update_path(socket_id, buffer), request->file_name) != 0) return eLink;
 
     return set_stat(request->file_name, file_state);
@@ -74,15 +77,13 @@ int NetBase::recive_hard_link(int socket_id, Service::protocol_header * request)
 
 int NetBase::recive_directory(int socket_id, Service::protocol_header * request)
 {
-    printf("recive dir\n");
     struct stat file_state;
 
     if(mkdir(request->file_name, 0777) != 0) return eMkdir;
     if(read(socket_id, &file_state, sizeof(file_state)) != sizeof(file_state))
         return eRead;
-    printf("dirname %s\n", request->file_name);
 
-    printf("mtim %dsetstat : %d\n", file_state.st_mtim, set_stat(request->file_name, file_state));
+    if(set_stat(request->file_name, file_state)) return eSetst;
 
     return Success;
 }
@@ -91,6 +92,8 @@ int NetBase::recive_soft_link(int socket_id, Service::protocol_header * request)
 {
     char buffer[256];
     struct stat file_state;
+
+    if(recive_code(socket_id, request) != 0) return Fail;
     
     if(read(socket_id, &file_state, sizeof(file_state)) != sizeof(file_state))
         return eRead;
@@ -105,13 +108,26 @@ int NetBase::recive_soft_link(int socket_id, Service::protocol_header * request)
 
 }
 
+int NetBase::recive_fifo_pipe(int socket_id, Service::protocol_header * request)
+{
+    struct stat file_state;
+
+/*  接收文件属性结构体数据  */
+    if(read(socket_id, &file_state, sizeof(file_state)) != sizeof(file_state))
+        return eRead;
+
+/*  根据路径名创建管道，设置管道文件属性  */
+    if(mkfifo(request->file_name, 0777)) return eMkfifo;
+    return (set_stat(request->file_name, file_state));
+}
+
 int NetBase::service_send(int socket_id, const char * path)
 {
     struct stat file_state;
     if(lstat(path, &file_state) != 0) return elstat;
 
     if(S_ISREG(file_state.st_mode))
-        return  send_normal_file(socket_id, path, file_state);
+        return send_normal_file(socket_id, path, file_state);
 
     else if(S_ISDIR(file_state.st_mode))
         return send_directory(socket_id, path, file_state);
@@ -119,6 +135,9 @@ int NetBase::service_send(int socket_id, const char * path)
     else if(S_ISLNK(file_state.st_mode))
         return send_sofk_link(socket_id, path, file_state);
     
+    else if(S_ISFIFO(file_state.st_mode))
+        return send_fifo_pipe(socket_id, path, file_state);
+
     else return 0;
 
 }
@@ -137,7 +156,8 @@ int NetBase::send_normal_file(int socket_id, const char * path, struct stat & fi
     if(fileid < 0) return eOpen;
 
 /*  硬链接，发送相应请求，无需发送文件内容  */
-    ishard = check_inode(socket_id, file_state.st_ino);
+    ishard = check_inode(socket_id, file_state.st_ino) && \
+        strcmp(path, inode_get(socket_id, file_state.st_ino).c_str());
 
 /*  设置消息头部信息，表明需要采取的操作和传输的数据大小,若文件为硬链接则只需要发送链接到的文件名，
     长度为文件名的长度   */
@@ -153,9 +173,10 @@ int NetBase::send_normal_file(int socket_id, const char * path, struct stat & fi
     /*  并在inode表中增加次文件的inode，用于判断此文件的硬链接  */
         add_inode(socket_id, file_state.st_ino, std::string(path));
     }
+    /*  设置文件哈希值  */
+    service.setcode(gethashcode(path));
 
-    if(write(socket_id, service.getOut(), sizeof(Service::protocol_header)) \
-        != sizeof(Service::protocol_header)) return eWrite;
+    if(write(socket_id, service.getOut(), HEAD_SIZE) != HEAD_SIZE) return eWrite;
 
     if((real_file_state = load_real_stat(path, file_state)) == nullptr) return Fail;
 
@@ -203,15 +224,14 @@ int NetBase::send_directory(int socket_id, const char * path, struct stat & file
 /*  设置请求报文头，将请求发送到远程连接    */
     service.set(path, file_state.st_size, Service::Dir);
 
-    if(write(socket_id, service.getOut(), sizeof(Service::protocol_header)) \
-        != sizeof(Service::protocol_header)) return eWrite;
+    if(write(socket_id, service.getOut(), HEAD_SIZE) != HEAD_SIZE) return eWrite;
 
 /*  将文件属性结构体发送到远程连接  */
     if(write(socket_id, real_file_state, sizeof(struct stat)) != sizeof(struct stat))
         return eWrite;
 
 /*  遍历目录项，递归执行发送服务    */
-    while((directory_entry = readdir(directory)))
+    while((directory_entry = readdir(directory)) != nullptr)
     {   
         if(!strcmp(directory_entry->d_name, ".") || !strcmp(directory_entry->d_name, ".."))
             continue;
@@ -234,9 +254,9 @@ int NetBase::send_sofk_link(int socket_id, const char * path, struct stat & file
     if((real_file_state = load_real_stat(path, file_state)) == nullptr) return Fail;
 
     service.set(path, length, Service::Soft);
+    service.setcode(gethashcode(path));
 
-    if(write(socket_id, service.getOut(), sizeof(Service::protocol_header)) \
-        != sizeof(Service::protocol_header)) return eWrite;
+    if(write(socket_id, service.getOut(), HEAD_SIZE) != HEAD_SIZE) return eWrite;
     
 /*  将文件属性结构体发送到远程连接  */
     if(write(socket_id, real_file_state, sizeof(struct stat)) != sizeof(struct stat))
@@ -247,6 +267,25 @@ int NetBase::send_sofk_link(int socket_id, const char * path, struct stat & file
 
     return Success;
 }
+
+int NetBase::send_fifo_pipe(int socket_id, const char * path, struct stat & file_state)
+{
+    Service service;
+    struct stat * real_file_state;
+
+    if((real_file_state = load_real_stat(path, file_state)) == nullptr) return Fail;
+
+    service.set(path, 0, Service::Pipe);
+    
+    if(write(socket_id, service.getOut(), HEAD_SIZE) != HEAD_SIZE) return eWrite;
+    
+/*  将文件属性结构体发送到远程连接  */
+    if(write(socket_id, real_file_state, sizeof(struct stat)) != sizeof(struct stat))
+        return eWrite;
+
+    return Success;
+}
+
 
 bool NetBase::ends_with_stat(const char * path) const
 {

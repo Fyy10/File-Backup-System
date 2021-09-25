@@ -1,6 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "filter.hpp"
 #include "socket.hpp"
 #include "service.hpp"
 #include "netbase.hpp"
@@ -12,20 +13,35 @@ class Client : public NetBase
 
     public:
 
+    Client(int coding) : NetBase(coding) {}
+
     bool connectServer();
 
-    int regist(const char * password)
+    unsigned int regist(const char * password)
     {
-        return request(0u, password);
+        char request[4] = {"RGT"};
+        return this->request(*(unsigned int *)request, password);
     }
-    int login(unsigned int user_id, const char * password)
+    unsigned int login(unsigned int user_id, const char * password)
     {
         return request(user_id, password);
     }
 
+    bool check_file(const std::string & path);
+    
     int backup(const char * path);
 
-    int recover(char * path);
+    int recover(const char * path);
+
+    int update(const char * path);
+
+    int remove(const char * path);
+
+    private:
+
+    bool service_check(const std::string & path, int flag);
+
+    bool check(const std::string & path);
 
     private:
 
@@ -65,14 +81,20 @@ class Client : public NetBase
 
     virtual int set_stat(const char * path, struct stat & file_state);
 
+    virtual std::string gethashcode(const std::string & path)
+    {
+        return HashList::gethashcode(path);
+    }
 
-    int request(unsigned int user_id, const char * password);
+    unsigned int request(unsigned int user_id, const char * password);
 
     private:
     
     Service service;
     
     const uint16_t port = 12800u;
+
+    std::string origin_prefix;
 
     const char * server_address = "127.0.0.1";
 

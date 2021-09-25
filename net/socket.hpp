@@ -2,6 +2,8 @@
 #define SOCKET_HPP
 
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define Default 10u
 #define Timeout 30u
@@ -26,6 +28,16 @@ class Socket
     int getfd()
     {
         return socket_id;
+    }
+
+    const char * ip_string(unsigned int ip)
+    {
+        return inet_ntoa(*((in_addr *)&ip));
+    }
+
+    unsigned int remote_ip()
+    {
+        return ((struct sockaddr_in *)&remote_address)->sin_addr.s_addr;
     }
 
     ~Socket();

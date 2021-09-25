@@ -51,6 +51,10 @@ void Service::set(const char * path, unsigned int length, int request)
         return recover(path);
     case Sucs:
         return success(length);
+    case Check:
+        return check(path, length);
+    case Remv:
+        return remove(path);
     case Fail:
         return failure();
     default:
@@ -89,5 +93,20 @@ void Service::fifopipe(const char * path, unsigned int length)
 {
     setrequest("pipe");
     out_header.length = length;
+    setpath(path);
+}
+
+
+void Service::check(const char * path, int length)
+
+{
+    setrequest("check");
+    out_header.length = length;
+    setpath(path);
+}
+
+void Service::remove(const char * path)
+{
+    setrequest("remove");
     setpath(path);
 }

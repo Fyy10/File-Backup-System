@@ -6,12 +6,17 @@
 
 #include "socket.hpp"
 #include "service.hpp"
+#include "hashlist.hpp"
 
 class NetBase
 {
 
     public:
 
+    NetBase() = default;
+    NetBase(int coding) : coding(coding) {}
+
+    enum { Success, eRead, eWrite, eOpen, eLink, eSymlink, eMkdir, elstat, eSetst, eOverflow, eMkfifo, Fail };
 
     protected:
 
@@ -25,11 +30,21 @@ class NetBase
 
     virtual struct stat * load_real_stat(const char * path, struct stat & file_state) = 0;
 
+    virtual int recive_code(int socket_id, Service::protocol_header * request)
+    {
+        return 0;
+    }
+    
+    virtual std::string gethashcode(const std::string & path)
+    {
+        return HashList::gethashcode(path);
+    }
+
     protected:
 
     Socket socket;
 
-    enum { Success, eRead, eWrite, eOpen, eLink, eSymlink, eMkdir, elstat, eSetst, eOverflow, Fail };
+    enum { HEAD_SIZE = sizeof(Service::protocol_header) };
 
     protected:
 
@@ -41,7 +56,7 @@ class NetBase
 
     int recive_soft_link(int fd, Service::protocol_header * request);
 
-    int recive_fifo_pipe(int fd, Service::protocol_header * request) { return Success; }
+    int recive_fifo_pipe(int fd, Service::protocol_header * request);
 
     virtual bool check_inode(int socket_id, ino_t inode) = 0;
 
@@ -56,11 +71,13 @@ class NetBase
 
     int send_sofk_link(int socket_id, const char * path, struct stat & file_state);
 
+    int send_fifo_pipe(int socket_id, const char * path, struct stat & file_state);
+
     bool ends_with_stat(const char * path) const;
 
-    private:
+    protected:
 
-    bool is_server;
+    int coding;
 
 };
 
