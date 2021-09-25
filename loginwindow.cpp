@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include "extensions.hpp"
 #include <string>
+#include "client.hpp"
 
 using namespace std;
 
@@ -34,10 +35,33 @@ void LoginWindow::login_clicked()
     // check user identity
     if (usernames.find(ui->AccountEdit->text().toStdString()) != usernames.end())
     {
-        msgbox.information(this, "Login", "Welcome, " + ui->AccountEdit->text() + "!");
-        w->set_passwd(ui->PasswdEdit->text().toStdString());
-        w->show();
-        this->close();
+        Client client(1);
+        bool connect_flag = client.connectServer();
+
+        // connect failed
+        if (connect_flag == false)
+        {
+            msgbox.critical(this, "Sorry", "The server is currently unavailable, please try again later");
+            return;
+        }
+
+        // connected
+        unsigned int account = atoll(usernames[ui->AccountEdit->text().toStdString()].c_str());
+
+        int fail_flag = client.login(account, ui->PasswdEdit->text().toStdString().c_str());
+
+        // login successfully
+        if (!fail_flag)
+        {
+            msgbox.information(this, "Login", "Welcome, " + ui->AccountEdit->text() + "!");
+            w->set_passwd(ui->PasswdEdit->text().toStdString());
+            w->show();
+            this->close();
+        }
+        else
+        {
+            msgbox.critical(this, "Login failed", "Invalid account or password, please try again");
+        }
     }
     else
     {
