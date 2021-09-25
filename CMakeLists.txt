@@ -95,3 +95,7 @@ install(
     TARGETS File-Backup-System
     RUNTIME DESTINATION bin
 )
+
+# server
+add_executable(Server server_run.cpp)
+target_link_libraries(Server ${FBS_LIBS})
