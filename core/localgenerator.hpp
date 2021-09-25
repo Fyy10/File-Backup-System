@@ -26,6 +26,13 @@ class LocalGenerator : public Generator
         return (!Remove(path));
     }
 
+    int remove_dir(std::string & path)
+    {
+        struct stat file_state;
+        if(lstat(path.c_str(), &file_state)) return -2;
+        return (!Remove(path));
+    }
+
     private:
     virtual bool create_normal_file(std::string & src, std::string & dest,
         struct stat & src_file_state, Export & destination);
