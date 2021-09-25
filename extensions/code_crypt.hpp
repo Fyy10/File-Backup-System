@@ -29,8 +29,9 @@ using namespace std;
 // 超类
 // class Export
 // {
-// public:
-//     int exportContent(int r, int w, const char *keyin = nullptr);
+//     public:
+//     virtual int exportContent(int src, int dest, const char * key) = 0;
+//     virtual ~Export() = default;
 // };
 
 // leaf node of huffman tree

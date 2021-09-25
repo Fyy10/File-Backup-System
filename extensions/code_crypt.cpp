@@ -137,6 +137,17 @@ int ExportCompress::exportContent(int r, int w, const char* keyin)
     src = fdopen(r, "r");
     des = fdopen(w, "w");
 
+    char ch = 0;
+    ch = getc(src);
+    if(ch == EOF){
+        // cerr << "Error: the file can not be empty!" << endl;
+        // exit(1);
+        fclose(src);
+        fclose(des);
+        return 0;
+    }
+    fseek(src, 0, SEEK_SET);
+
     map<char, int> m;
     char key = 0;
 
@@ -154,17 +165,17 @@ int ExportCompress::exportContent(int r, int w, const char* keyin)
     //构建哈夫曼树
     HuffmanTree huffmantree(m);
 
-    stringstream strstr;
-    string str;
+    string s;
     // 将哈夫曼表存入目的文件
-    for (auto iter : m)
+    for(auto iter: m)
     {
-        str.clear();
-        strstr.clear();
-        strstr << "~" << iter.second;
-        strstr >> str;
-        str = iter.first + str + " ";
-        fwrite(str.data(), sizeof(char), str.length(), des);
+        fwrite(&(iter.first), sizeof(char), 1, des);
+        ch = '~';
+        fwrite(&ch, sizeof(char), 1, des);
+        string s = to_string(iter.second);
+        fwrite(s.c_str(), sizeof(char), s.length(), des);
+        ch = ' ';
+        fwrite(&ch, sizeof(char), 1, des);
         // des << iter.first << "~" << iter.second << " ";
     }
     fwrite("!@#$%^&*()_+", sizeof(char), 12, des);
@@ -233,6 +244,16 @@ int ExportDecompress::exportContent(int r, int w, const char* keyin)
     string filestream;
     map<char, int> m;
 
+    ch = getc(src);
+    if(ch == EOF){
+        // cerr << "Error: the file can not be empty!" << endl;
+        // exit(1);
+        fclose(src);
+        fclose(des);
+        return 0;
+    }
+    fseek(src, 0, SEEK_SET);
+
     //读取map<字符，词频>
     while (true)
     {
@@ -282,9 +303,13 @@ int ExportDecompress::exportContent(int r, int w, const char* keyin)
     string end = filestream.substr(filestream.size() - 16, 16);
     bitset<8> endloc(end, 8, 16);
     ulong add = endloc.to_ulong();
-    end = end.substr(8 - add, add);
-    filestream.erase(filestream.size() - 16, 16);
-    filestream += end;
+    if(add != 0){
+        end = end.substr(8 - add, add);
+        filestream.erase(filestream.size() - 16, 16);
+        filestream += end;
+    }else{
+        filestream.erase(filestream.size() - 8, 8);
+    }
 
     // 01串遍历哈夫曼树
     for (auto ch : filestream)
@@ -317,6 +342,17 @@ int ExportEncrypt::exportContent(int r, int w, const char *keyin)
     FILE *src, *des;
     src = fdopen(r, "r");
     des = fdopen(w, "w");
+
+    char ch = 0;
+    ch = getc(src);
+    if(ch == EOF){
+        // cerr << "Error: the file can not be empty!" << endl;
+        // exit(1);
+        fclose(src);
+        fclose(des);
+        return 0;
+    }
+    fseek(src, 0, SEEK_SET);
 
     // 获取密码字符串，限定长度为32字节
     char key[KEYLEN];
@@ -376,6 +412,17 @@ int ExportDecrypt::exportContent(int r, int w, const char *keyin)
     FILE *src, *des;
     src = fdopen(r, "r");
     des = fdopen(w, "w");
+
+    char ch = 0;
+    ch = getc(src);
+    if(ch == EOF){
+        // cerr << "Error: the file can not be empty!" << endl;
+        // exit(1);
+        fclose(src);
+        fclose(des);
+        return 0;
+    }
+    fseek(src, 0, SEEK_SET);
 
     // 获取密码字符串，限定长度为32字节
     char key[KEYLEN];
