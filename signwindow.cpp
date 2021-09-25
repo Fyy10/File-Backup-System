@@ -4,6 +4,7 @@
 #include "extensions.hpp"
 #include <map>
 #include <string>
+#include "client.hpp"
 
 using namespace std;
 
@@ -35,7 +36,7 @@ void SignWindow::signup_clicked()
         msgbox.critical(this, "Invalid password", "The password should be no shorter than " + num + " characters");
         ui->PasswdEdit1->clear();
         ui->PasswdEdit2->clear();
-        ui->AccountLineEdit->clear();
+        // ui->AccountLineEdit->clear();
         return;
     }
     else if ((ui->PasswdEdit1->text().length() > MAX_PASSWD_LEN) || (ui->PasswdEdit2->text().length() > MAX_PASSWD_LEN))
@@ -44,7 +45,7 @@ void SignWindow::signup_clicked()
         msgbox.critical(this, "Invalid password", "The password should not be longer than " + num + " characters");
         ui->PasswdEdit1->clear();
         ui->PasswdEdit2->clear();
-        ui->AccountLineEdit->clear();
+        // ui->AccountLineEdit->clear();
         return;
     }
     else if (ui->PasswdEdit1->text() != ui->PasswdEdit2->text())
@@ -52,7 +53,7 @@ void SignWindow::signup_clicked()
         msgbox.critical(this, "Invalid password", "Two passwords are not identical");
         ui->PasswdEdit1->clear();
         ui->PasswdEdit2->clear();
-        ui->AccountLineEdit->clear();
+        // ui->AccountLineEdit->clear();
         return;
     }
 
@@ -69,12 +70,29 @@ void SignWindow::signup_clicked()
     }
 
     // valid username and password
-    // todo: get an account from server
-    QString account = "114514";
-    usernames[ui->AccountLineEdit->text().toStdString()] = account.toStdString();
+    Client client(1);
+    bool connect_flag = client.connectServer();
+
+    // connect failed
+    if (connect_flag == false)
+    {
+        msgbox.critical(this, "Sorry", "The server is currently unavailable, please try again later");
+        return;
+    }
+
+    // connected
+    unsigned int account = client.regist(ui->PasswdEdit1->text().toStdString().c_str());
+    if (account == Client::Fail)
+    {
+        msgbox.critical(this, "Oops!", "Register failed, please try again");
+        return;
+    }
+
+    // successfully registered
+    usernames[ui->AccountLineEdit->text().toStdString()] = to_string(account);
     users.save(usernames);
 
-    msgbox.information(this, "Success", "Signed up successfully!");
+    msgbox.information(this, "Success", "Signed up successfully, now you can login!");
     // ui->AccountLineEdit->setText(account);
     this->close();
 }
