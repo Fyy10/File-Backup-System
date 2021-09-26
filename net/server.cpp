@@ -291,11 +291,12 @@ int Server::service_check(int connect_id, Service::protocol_header * request)
     if(request->length == 1) service.set(0, 0, Service::Sucs);
     else 
     {
-        file_id fileid((string(request->file_name) + ".stat").c_str(), O_RDWR, -1);
-        if(fileid() < 0) goto end;
-        if(lseek(fileid(), sizeof(struct stat), SEEK_SET) <= 0) goto end;
-        if(read(fileid(), hashcode, 64) != 64) goto end;
+        // file_id fileid((string(request->file_name) + ".stat").c_str(), O_RDWR, -1);
+        // if(fileid() < 0) goto end;
+        // if(lseek(fileid(), sizeof(struct stat), SEEK_SET) <= 0) goto end;
+        // if(read(fileid(), hashcode, 64) != 64) goto end;
     
+        strcpy(hashcode, HashList::gethashcode(string(request->file_name)).c_str());
         if(strcmp(hashcode, request->hashcode) == 0) service.set(0, 0, Service::Sucs);
     }
 
@@ -405,7 +406,7 @@ int Server::check(int connect_id, Service::protocol_header * request)
     strncpy(path, request->file_name, 256);
 
 /*  统计文件总数，用于判断原目录是否缺少文件    */
-    sum = count_files(update_path(connect_id, path)) / 2;
+    sum = (count_files(update_path(connect_id, path)) + 1) / 2;
 
 /*  已检查文件数目  */
     count = 0;

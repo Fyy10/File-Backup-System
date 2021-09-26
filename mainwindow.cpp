@@ -172,8 +172,66 @@ void MainWindow::recover_clicked()
 void MainWindow::verify_clicked()
 {
     QMessageBox msgbox;
+
+    // generate local cache
+    // file filter
+    string filter;
+    if (ui->UserFilterOption->isChecked())
+    {
+        filter = ".+\\.(" + ui->UserFilterEdit->text().toStdString() + ")$";
+    }
+    else
+    {
+        filter = filter_table[ui->FilterBox->currentIndex()];
+    }
+
+    // time filter
+    time_t time_filter;
+    if (ui->DateEdit->isEnabled() && ui->TimeEdit->isEnabled())
+    {
+        struct tm date_time;
+        // date
+        // printf("%s\n", ui->DateEdit->text().toStdString().c_str());
+        sscanf(ui->DateEdit->text().toStdString().c_str(), "%d/%d/%d", &date_time.tm_year, &date_time.tm_mon, &date_time.tm_mday);
+        date_time.tm_year -= 1900;
+        date_time.tm_mon -= 1;
+        // time
+        // printf("%s\n", ui->TimeEdit->text().toStdString().c_str());
+        sscanf(ui->TimeEdit->text().toStdString().c_str(), "%d:%d", &date_time.tm_hour, &date_time.tm_min);
+        date_time.tm_isdst = 0;
+        time_filter = mktime(&date_time);
+    }
+    else
+    {
+        // no time filter
+        time_filter = 0;
+    }
+
+    FileFilter ff(filter, {time_filter, 0});
+
+    LocalGenerator g = LocalGenerator(ui->SourcePath->text().toStdString(), ui->TargetPath->text().toStdString(), passwd, ff);
+    // Duplicator e;
+    ExportEncodeEncrypt e;
+
+    // remove previous backup files
+    string source_root = ui->SourcePath->text().toStdString();
+    string target_root = ui->TargetPath->text().toStdString();
+    string target_path = target_root + (source_root.c_str() + source_root.rfind('/'));
+    g.remove_dir(target_path);
+
+    // local cache dir
+    g.build(e);
+
     // verify
-    msgbox.information(this, "Success", "Verification passed!");
+    bool verify_flag = client->check_file(target_path);
+    if (verify_flag)
+    {
+        msgbox.information(this, "Success", "Verification passed!");
+    }
+    else
+    {
+        msgbox.critical(this, "Sorry", "Verification failed, please backup again");
+    }
 }
 
 void MainWindow::time_clicked()
