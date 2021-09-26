@@ -74,7 +74,7 @@ loop:
         break;
     }
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
-    pool->Print("Admin");
+    // pool->Print("Admin");
     goto loop;
 
     return (void *) (0);
@@ -185,7 +185,7 @@ void Pthreadspool::extend(int numbers)
     remains += numbers;
 
     printf("reduce ? %d\n",pool_reduce);
-    Print("extend");
+    // Print("extend");
 
     while(numbers)
     {
@@ -244,7 +244,7 @@ void Pthreadspool::Close()
 
 void Pthreadspool::Print(char * str)
 {
-    printf("after %s\t[");
+    // printf("after %s\t[");
     printf("normal:%d "
             "pool_size:%d "
             "max_size :%d "
@@ -252,7 +252,7 @@ void Pthreadspool::Print(char * str)
             "free_nums: %d "
             "remains:%d "
             "task_nums:%d]\n",
-    normal, pool_size, max_size, busy_nums, free_nums, remains, tasks_queue.size());
+    normal, pool_size, max_size, busy_nums, free_nums, remains, (int)tasks_queue.size());
 }
 
 void Pthreadspool::addTask(struct task & new_task)

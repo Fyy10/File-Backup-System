@@ -42,22 +42,22 @@
   <widget class="QLabel" name="AccountLabel">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>30</x>
      <y>20</y>
-     <width>71</width>
+     <width>81</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Account:</string>
+    <string>Username:</string>
    </property>
   </widget>
   <widget class="QLabel" name="PasswdLabel">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>30</x>
      <y>50</y>
-     <width>81</width>
+     <width>91</width>
      <height>20</height>
     </rect>
    </property>
@@ -75,7 +75,7 @@
     </rect>
    </property>
    <property name="placeholderText">
-    <string>Please input your account</string>
+    <string>Please input your username</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="PasswdEdit">
