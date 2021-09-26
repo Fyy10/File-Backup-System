@@ -47,6 +47,8 @@ int Client::set_stat(const char * path, struct stat & file_state)
 
 int Client::backup(const char * path)
 {
+    // clear inode map
+    inodes_map.clear();
     char pwd[256];
     string path_str(path), newpath;
 
@@ -218,7 +220,8 @@ int Client::update(const char * path)
         (write(socket.getfd(), &file_state, sizeof(struct stat)) != sizeof(struct stat)))
             result = -1;
     }
-    else result = service_send(socket.getfd(), path);
+    // else result = service_send(socket.getfd(), path);
+    else result = service_send(socket.getfd(), newpath.c_str());
 
     if (chdir(pwd)) return -1;
     else return result;
@@ -227,5 +230,11 @@ int Client::update(const char * path)
 int Client::remove(const char * path)
 {
     service.set(string(path + origin_prefix.length() + 1).c_str(), 0, Service::Remv);
+    return write(socket.getfd(), service.getOut(), HEAD_SIZE);
+}
+
+int Client::remove_dir(const char* path)
+{
+    service.set(path, 0, Service::Remv);
     return write(socket.getfd(), service.getOut(), HEAD_SIZE);
 }

@@ -5,6 +5,7 @@
 
 #include <string>
 #include <time.h>
+#include "client.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -38,16 +39,25 @@ MainWindow::MainWindow(QWidget *parent)
     filter_table[3] = ".+\\.(mp4|avi|flv|mkv)$";
     // Music (*.mp3; *.ogg; *.wav)
     filter_table[4] = ".+\\.(mp3|ogg|wav)$";
+
+    listening = false;
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete client;
 }
 
 int MainWindow::set_passwd(const string passwd)
 {
     this->passwd = passwd;
+    return 0;
+}
+
+int MainWindow::set_client(Client * client)
+{
+    this->client = client;
     return 0;
 }
 
@@ -107,18 +117,36 @@ void MainWindow::backup_clicked()
     LocalGenerator g = LocalGenerator(ui->SourcePath->text().toStdString(), ui->TargetPath->text().toStdString(), passwd, ff);
     // Duplicator e;
     ExportEncodeEncrypt e;
+
+    // remove previous backup files
+    string source_root = ui->SourcePath->text().toStdString();
+    string target_root = ui->TargetPath->text().toStdString();
+    string target_path = target_root + (source_root.c_str() + source_root.rfind('/'));
+    g.remove_dir(target_path);
+
     bool succ_flag = g.build(e);
 
     if (succ_flag)
     {
         // listen file change
-        pthread_t tid;
+        // cancel previous listen thread if possible
+        if (listening)
+        {
+            pthread_cancel(listen_tid);
+        }
+
         struct watch_roots* tmp = new struct watch_roots;
         tmp->source_root = ui->SourcePath->text().toStdString();
         tmp->target_root = ui->TargetPath->text().toStdString();
         tmp->passwd = passwd;
         tmp->ff = ff;
-        pthread_create(&tid, NULL, listen_file_change, (void*)tmp);
+        tmp->client = client;
+        pthread_create(&listen_tid, NULL, listen_file_change, (void*)tmp);
+
+        // remove previous backup on the server
+        client->remove_dir(target_path.c_str() + target_path.rfind('/') + 1);
+        // upload to the server
+        client->backup(target_path.c_str());
 
         msgbox.information(this, "Success", "Backup done!");
     }

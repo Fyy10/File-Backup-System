@@ -316,9 +316,17 @@ int Server::recive_code(int socket_id, Service::protocol_header * request)
 
 int Server::remove(int connect_id, const char * path)
 {
-    serverlog((string("remove ") + to_string(clients[connect_id].user.user_id) + '/' + path).c_str(), connect_id);
-    return this->remove((to_string(clients[connect_id].user.user_id) + '/' + path).c_str());
+    string newpath = to_string(clients[connect_id].user.user_id) + '/' + path;
+    serverlog((string("remove ") + newpath).c_str(), connect_id);
+    if(access(newpath.c_str(), F_OK)) return Success;
+    return this->remove(newpath.c_str());
 }
+
+// int Server::remove(int connect_id, const char * path)
+// {
+//     serverlog((string("remove ") + to_string(clients[connect_id].user.user_id) + '/' + path).c_str(), connect_id);
+//     return this->remove((to_string(clients[connect_id].user.user_id) + '/' + path).c_str());
+// }
 
 #include <dirent.h>
 

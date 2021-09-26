@@ -14,12 +14,15 @@
 
 using namespace std;
 
+class Client;
+
 struct watch_roots
 {
     string source_root;
     string target_root;
     string passwd;
     FileFilter ff;
+    Client * client;
 };
 
 // a wrapper of Watcher, use watch_roots* as input
@@ -39,6 +42,7 @@ public:
     void add_watch_recursive(const char*);
     void add_watch_recursive(const string);
     void handle_events();
+    void set_client(Client *);
 
 private:
     // source root
@@ -55,6 +59,8 @@ private:
     string passwd;
     // file filter
     FileFilter ff;
+    // client pointer
+    Client * client;
 };
 
 #endif // LISTEN_FILE_CHANGE_HPP

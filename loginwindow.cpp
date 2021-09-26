@@ -35,8 +35,8 @@ void LoginWindow::login_clicked()
     // check user identity
     if (usernames.find(ui->AccountEdit->text().toStdString()) != usernames.end())
     {
-        Client client(1);
-        bool connect_flag = client.connectServer();
+        Client * client = new Client(1);
+        bool connect_flag = client->connectServer();
 
         // connect failed
         if (connect_flag == false)
@@ -48,13 +48,14 @@ void LoginWindow::login_clicked()
         // connected
         unsigned int account = atoll(usernames[ui->AccountEdit->text().toStdString()].c_str());
 
-        int fail_flag = client.login(account, ui->PasswdEdit->text().toStdString().c_str());
+        int fail_flag = client->login(account, ui->PasswdEdit->text().toStdString().c_str());
 
         // login successfully
         if (!fail_flag)
         {
             msgbox.information(this, "Login", "Welcome, " + ui->AccountEdit->text() + "!");
             w->set_passwd(ui->PasswdEdit->text().toStdString());
+            w->set_client(client);
             w->show();
             this->close();
         }

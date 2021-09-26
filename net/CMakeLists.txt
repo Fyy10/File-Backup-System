@@ -5,3 +5,5 @@ include_directories(
     ../core
     ../extensions
 )
+
+target_link_libraries(net PRIVATE core extensions)

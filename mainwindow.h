@@ -9,6 +9,8 @@
 
 using namespace std;
 
+class Client;
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -22,6 +24,7 @@ public:
     ~MainWindow();
 
     int set_passwd(const string);
+    int set_client(Client *);
 
 private slots:
     void browse_source_clicked();
@@ -38,7 +41,9 @@ private:
     Ui::MainWindow *ui;
 
     map<int, string> filter_table;
-
     string passwd;
+    Client * client;
+    bool listening;
+    pthread_t listen_tid;
 };
 #endif // MAINWINDOW_H

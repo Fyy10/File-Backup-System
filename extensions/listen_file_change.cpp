@@ -8,6 +8,7 @@
 #include <string.h>
 #include <pthread.h>
 #include "code_crypt.hpp"
+#include "client.hpp"
 
 using namespace std;
 
@@ -15,6 +16,7 @@ void * listen_file_change(void * roots)
 {
     struct watch_roots* source_target = (struct watch_roots*)roots;
     Watcher watcher(source_target->source_root, source_target->target_root, source_target->passwd, source_target->ff);
+    watcher.set_client(source_target->client);
     delete source_target;
     watcher.handle_events();
     return (void*)0;
@@ -168,6 +170,8 @@ void Watcher::handle_events() {
 
                         // if a dir is created, do not copy it recursively, just create and change attributes instead
                         make_directory(event_path.c_str(), target_path_full.c_str());
+                        // update to the server
+                        client->update(target_path_full.c_str());
 
                         // cout << "Copy directory " << event_path << " to " << target_path_full << endl;
                     }
@@ -180,6 +184,9 @@ void Watcher::handle_events() {
                         // Duplicator e;
                         ExportEncodeEncrypt e;
                         g.build(e);
+
+                        // update to the server
+                        client->update(target_path_full.c_str());
 
                         // cout << "Copy file " << event_path << " to " << target_path_full << endl;
                     }
@@ -194,6 +201,9 @@ void Watcher::handle_events() {
                         // todo: use filter
                         remove(target_path_full.c_str());
 
+                        // update to the server
+                        client->remove(target_path_full.c_str());
+
                         // cout << "Remove direcory " << target_path_full << endl;
                     }
                     else
@@ -203,6 +213,9 @@ void Watcher::handle_events() {
                         // remove file
                         // todo: use filter
                         remove(target_path_full.c_str());
+
+                        // update to the server
+                        client->remove(target_path_full.c_str());
 
                         // cout << "Remove file " << target_path_full << endl;
                     }
@@ -229,11 +242,17 @@ void Watcher::handle_events() {
                         // todo: use filter
                         remove(target_path_full.c_str());
 
+                        // update to the server
+                        client->remove(target_path_full.c_str());
+
                         // copy file
                         LocalGenerator g = LocalGenerator(event_path, target_path_dir, passwd, ff);
                         // Duplicator e;
                         ExportEncodeEncrypt e;
                         g.build(e);
+
+                        // update to the server
+                        client->update(target_path_full.c_str());
 
                         // cout << "Update file " << event_path << " to " << target_path_full << endl;
                     }
@@ -247,9 +266,23 @@ void Watcher::handle_events() {
                 {
                     // change attr
                     change_attr(event_path.c_str(), target_path_full.c_str());
+
+                    struct stat file_stat;
+                    lstat(target_path_full.c_str(), &file_stat);
+                    if (ff.ismatch(file_stat, target_path_full.c_str()))
+                    {
+                        // update to the server
+                        client->remove(target_path_full.c_str());
+                        client->update(target_path_full.c_str());
+                    }
                 }
             }
             i += EVENT_SIZE + event->len;
         }
     }
+}
+
+void Watcher::set_client(Client * client)
+{
+    this->client = client;
 }

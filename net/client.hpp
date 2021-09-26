@@ -37,6 +37,8 @@ class Client : public NetBase
 
     int remove(const char * path);
 
+    int remove_dir(const char* path);
+
     private:
 
     bool service_check(const std::string & path, int flag);
