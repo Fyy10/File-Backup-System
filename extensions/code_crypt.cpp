@@ -474,6 +474,14 @@ int ExportDecrypt::exportContent(int r, int w, const char *keyin)
 
 int ExportEncodeEncrypt::exportContent(int src, int tgt, const char* passwd)
 {
+    // skip pipeline files
+    struct stat file_stat;
+    fstat(src, &file_stat);
+    if (S_ISFIFO(file_stat.st_mode))
+    {
+        return 0;
+    }
+
     // tmp file
     char tmp_file[] = "FileBackup_XXXXXX";
     int tmp_fd = mkstemp(tmp_file);
@@ -496,6 +504,14 @@ int ExportEncodeEncrypt::exportContent(int src, int tgt, const char* passwd)
 
 int ExportDecodeDecrypt::exportContent(int src, int tgt, const char* passwd)
 {
+    // skip pipeline files
+    struct stat file_stat;
+    fstat(src, &file_stat);
+    if (S_ISFIFO(file_stat.st_mode))
+    {
+        return 0;
+    }
+
     // tmp file
     char tmp_file[] = "FileBackup_XXXXXX";
     int tmp_fd = mkstemp(tmp_file);

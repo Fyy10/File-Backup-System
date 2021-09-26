@@ -37,9 +37,9 @@ bool Generator::autobuild(string & src, string & dest, Export & destination)
     else if(S_ISFIFO(src_file_state.st_mode))
         result = create_fifo_pipe(src, dest, src_file_state, destination);
 
-    if(result == false) return false;
-    if(S_ISDIR(src_file_state.st_mode)) hashlist.add(src, HashList::Dir);
-    else hashlist.add(src, HashList::File); 
+    // if(result == false) return false;
+    // if(S_ISDIR(src_file_state.st_mode)) hashlist.add(src, HashList::Dir);
+    // else hashlist.add(src, HashList::File); 
 
     return true;
     

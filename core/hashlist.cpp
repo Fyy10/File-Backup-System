@@ -1,11 +1,21 @@
 #include "hashlist.hpp"
 
 #include <stdio.h>
+// #include <sys/types.h>
+// #include <sys/stat.h>
+// #include <unistd.h>
 
 using namespace std;
 
 string HashList::gethashcode(const string & path)
 {
+    // struct stat file_stat;
+    // lstat(path.c_str(), &file_stat);
+    // if (S_ISFIFO(file_stat.st_mode))
+    // {
+    //     // pipeline files do not have hashcode
+    //     return string("00000000");
+    // }
     int n;
     FILE * pfile;
     char hashcode[64];
