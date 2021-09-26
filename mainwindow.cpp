@@ -156,12 +156,32 @@ void MainWindow::backup_clicked()
 
 void MainWindow::recover_clicked()
 {
-    QMessageBox msgbox;
+    QFileDialog file_diag;
+    QString recover_path = file_diag.getExistingDirectory(this, "Choose the folder to restore the files", "./");
 
-    LocalGenerator g = LocalGenerator(ui->TargetPath->text().toStdString(), ui->SourcePath->text().toStdString(), passwd);
+    if (recover_path.isEmpty()) return;
+
+    // the server recovers to the working dir
+    string source_root = ui->SourcePath->text().toStdString();
+    string curr_path = string(".") + (source_root.c_str() + source_root.rfind('/'));
+
+    // from curr dir to user-defined recover dir
+    LocalGenerator g = LocalGenerator(curr_path, recover_path.toStdString(), passwd);
     // Duplicator e;
     ExportDecodeDecrypt e;
+
+    // remove previous recover files (curr working dir)
+    g.remove_dir(curr_path);
+
+    // download from server
+    client->recover(source_root.c_str() + source_root.rfind('/') + 1);
+
+    // recover
     bool succ_flag = g.build(e);
+    // remove tmp recovery (curr working dir)
+    g.remove_dir(curr_path);
+
+    QMessageBox msgbox;
 
     if (succ_flag)
         msgbox.information(this, "Success", "Recover done!");
