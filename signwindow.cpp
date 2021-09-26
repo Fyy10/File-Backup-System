@@ -57,6 +57,13 @@ void SignWindow::signup_clicked()
         return;
     }
 
+    // empty username
+    if (ui->AccountLineEdit->text() == "")
+    {
+        msgbox.critical(this, "Invalid username", "Please input your username");
+        return;
+    }
+
     // invalid username
     MapFile users("./accounts");
     map<string, string> usernames = users.load();
